@@ -2,50 +2,21 @@ from src.cell import Cell
 from src.board import Board
 
 class Word:
-    def __init__(self, first_cell: Cell) -> None:
+    def __init__(self, board: Board, path: list[tuple[int, int, str, bool]]) -> None:
         """
-        Initialize a new word with the first cell.
+        Initialize a new word based on a path of cells on the board.
 
-        :param first_cell: The starting cell for the word.
+        :param board: The game board containing the cells.
+        :param path: A list of tuples representing the coordinates and character
+                     of each cell in the word path.
         """
-        self.cells = [first_cell]
-    
-    def add(self, cell: Cell):
-        """
-        Add a cell to the current word.
+        self.word: str = ""
+        self.path = path
 
-        :param cell: The cell to be added to the word.
-        """
-        self.cells.append(cell)
+        self.points = 0
+        self.gems = 0
 
-    def pop(self):
-        """
-        Remove the last cell from the current word.
-        """
-        self.cells.pop()
-
-    def _get_path(self) -> list[tuple[int, int]]:
-        """
-        Get the path of the word as a list of (x, y) coordinates.
-
-        :return: A list of tuples representing the coordinates of the cells in the word.
-        """
-        return [(cell.x, cell.y) for cell in self.cells]
-    
-    def __str__(self) -> str:
-        """
-        Convert the word to a string.
-
-        :return: The word formed by concatenating the values of its cells.
-        """
-        return ''.join(cell.value for cell in self.cells)
-    
-    def count_points(self) -> int:
-        """
-        Calculate the points for the word based on letter scores and multipliers.
-
-        :return: The total points for the word.
-        """
+        # Dictionary to store the points associated with each letter.
         letter_scores = {
             'a': 1, 'e': 1, 'i': 1, 'o': 1,
             'n': 2, 'r': 2, 's': 2, 't': 2,
@@ -58,71 +29,109 @@ class Word:
         }
 
         multiplier = 1
-        points = 0
 
-        for cell in self.cells:
-            letter_score = letter_scores[cell.value]
-            match cell.flag:
-                case "2": letter_score *= 2  # Double letter score
-                case "3": letter_score *= 3  # Triple letter score
-                case "$": multiplier = 2    # Double word score
-            points += letter_score
+        # Iterate through each cell in the path to build the word, calculate points, and count gems.
+        for x, y, char, _ in self.path:
+            self.word += char
 
-        # Apply word multiplier and bonus points
-        points = points * multiplier + (10 if len(self.cells) >= 6 else 0)
+            # Calculate score for the current letter.
+            letter_score = letter_scores[char]
+            cell: Cell = board.get_cell(x, y)
 
-        # Add points for each cell that can be swapped
-        for cell in self.cells:
+            # Check for special flags on the cell that modify the score or multiplier.
+            if cell.flag == "2":
+                letter_score *= 2
+            elif cell.flag == "3":
+                letter_score *= 3
+            elif cell.flag == "$":
+                multiplier = 2
+
+            self.points += letter_score
+
+            # Increment the gem counter if the cell allows swapping.
             if cell.can_swap:
-                points += 1
+                self.gems += 1
 
-        return points
+        # Apply the multiplier to the total points.
+        self.points *= multiplier
+
+        # Bonus points for words with 6 or more characters.
+        if len(self.word) >= 6:
+            self.points += 10
+
+    def get_points(self) -> int:
+        """
+        Get the total points for the word.
+
+        :return: The total points calculated for the word.
+        """
+        return self.points
     
+    def has_swap(self) -> bool:
+        """
+        Check if any cell in the word's path allows swapping.
+
+        :return: True if there is at least one swappable cell, otherwise False.
+        """
+        for path in self.path:
+            if path[3]:
+                return True
+        return False
+    
+    def print(self) -> None:
+        """
+        Print the details of the word, including points, starting position,
+        and any swap details if available.
+        """
+        print(f"Word: {self.word}")
+        print(f"Start at: x: {self.path[0][0] + 1} | y: {self.path[0][1] + 1}")
+        print(f"Points: {self.points}")
+        print(f"Gems: {self.gems}")
+
+        if self.has_swap():
+            for pos in self.path:
+                if pos[3]:
+                    print("Swap to:", pos[2], "at", pos[0] + 1, pos[1] + 1)
+
 class WordList:
     def __init__(self) -> None:
         """
-        Initialize the WordList with an empty list of words.
+        Initialize the WordList with an empty list of word paths.
         """
-        # List of tuples where each tuple contains a word and its path
-        self.objects: list[tuple[str, list[tuple[int, int]]]] = []
+        # List to store word paths; each path is a list of tuples.
+        self.paths: list[list[tuple[int, int, str, bool]]] = []
 
     def get_sorted(self, board: Board) -> list[Word]:
         """
-        Get a sorted list of words based on their points and remove duplicates.
+        Get a sorted list of Word objects based on their points, 
+        considering any bonus points or gems, and remove duplicates.
 
-        :param board: The game board used to construct words.
-        :return: A list of unique words sorted by their points in descending order.
+        :param board: The game board used to construct Word objects.
+        :return: A list of unique Word objects sorted by their points in descending order.
         """
-        words = self.get_words(board)
-        words.sort(key=lambda word: word.count_points(), reverse=True)
+        words: list[Word] = self.get_words(board)
+        words.sort(key=lambda word: word.get_points() + word.gems, reverse=True)
 
         return words
 
-    def _add(self, word: tuple[str, list]):
+    def _add(self, path: list[tuple[int, int, str, bool]]) -> None:
         """
-        Add a word and its path to the list.
+        Add a word path to the list of paths.
 
-        :param word: A tuple containing the word and its path.
+        :param word: A tuple containing the word and its corresponding path.
         """
-        self.objects.append(word)
+        self.paths.append(path)
 
-    def get_words(self, board: Board) -> list:
+    def get_words(self, board: Board) -> list[Word]:
         """
-        Convert stored word and path tuples to Word objects.
+        Convert stored word paths into Word objects.
 
         :param board: The game board used to get cell values.
-        :return: A list of Word objects.
+        :return: A list of Word objects created from the stored paths.
         """
         words: list[Word] = []
-        for obj in self.objects:
-            first_position: tuple[int, int] = obj[1][0]
-            word: Word = Word(board.get_cell(first_position[0], first_position[1]))
-
-            # Add cells to the word based on the stored path
-            for i in range(1, len(obj[1])):
-                position = obj[1][i]
-                word.add(board.get_cell(position[0], position[1]))
-
+        for path in self.paths:
+            word: Word = Word(board, path)
             words.append(word)
 
         return words

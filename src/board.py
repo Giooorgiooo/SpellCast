@@ -50,7 +50,7 @@ class Board:
 
         i: int = 0  # Index for traversing the input string
         char_counter: int = 0  # Counter to keep track of the position in the board
-        flag: str = ""  # Current flag to be applied to cells
+        flag: str = " "  # Current flag to be applied to cells
         can_swap: bool = False  # Flag indicating if the cell can be swapped
 
         while i < len(board_string):
@@ -64,7 +64,7 @@ class Board:
                 # Create a new Cell and add it to the board
                 self.cells[char_counter // Board.COLS].append(Cell(token.lower(), char_counter % Board.COLS, char_counter // Board.COLS, flag, can_swap))
                 char_counter += 1  # Move to the next cell
-                flag = ""  # Reset the flag for the next cell
+                flag = " "  # Reset the flag for the next cell
                 can_swap = False  # Reset the swap flag
 
             i += 1  # Move to the next character in the input string
@@ -105,5 +105,5 @@ class Board:
         """
         for row in self.cells:
             for cell in row:
-                print(cell.value + " ", end="")  # Print the cell value followed by a space
+                print(cell.value + "/" + cell.flag + "|", end="")  # Print the cell value followed by a space
             print()  # Move to the next line after printing a row
