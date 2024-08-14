@@ -33,11 +33,11 @@ class Board:
                 # Randomly choose a letter and a flag indicating whether the cell can be swapped
                 letter = choice(ascii_lowercase)
                 can_swap = random() < 0.3
-                self.cells[y].append(Cell(letter, x, y, "", can_swap))
+                self.cells[y].append(Cell(letter, x, y, " ", can_swap))
 
         # Randomly set special flags for some cells
-        choice(choice(self.cells)).flag = "2"  # Double letter score
-        choice(choice(self.cells)).flag = "D" if random() > 0.5 else "T"  # Double or triple word score
+        choice(choice(self.cells)).flag = "$"  # Double letter score
+        choice(choice(self.cells)).flag = "2" if random() > 0.5 else "3"  # Double or triple word score
 
     def _setup_from_input(self) -> None:
         """
