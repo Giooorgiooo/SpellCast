@@ -31,7 +31,7 @@ class WordSearch:
         """
         root = TrieNode()
         for word in self.words:
-            if modified and len(word) < 7:
+            if modified and len(word) < 6:
                 continue
 
             node = root
@@ -137,10 +137,11 @@ class WordSearch:
         average_time: float = 0
         start: float = time.perf_counter()  # Record the start time
 
-        games: int = 1000  # Number of games to benchmark
+        games: int = 100  # Number of games to benchmark
 
         for i in range(games):
             board: Board = Board(False)  # Create a new board
+            board.print()
             algorithm_start: float = time.perf_counter()  # Record the time before finding words
             word_list: WordList = self.find_all_words(board, swaps)  # Find all words in the board
 
@@ -151,6 +152,8 @@ class WordSearch:
             
             # Update the average time
             average_time += (time.perf_counter() - algorithm_start) / games
+
+            sorted_list[0].print()
 
         # Print the benchmark results
         print("Average points:", average_points)

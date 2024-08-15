@@ -1,5 +1,12 @@
 class Cell:
-    def __init__(self, value: str, x: int, y: int, flag: str, can_swap: bool) -> None:
+    class Flag:
+        NONE = 0
+        DOUBLE_LETTER_SCORE = 1
+        TRIPLE_LETTER_SCORE = 2
+        DOUBLE_WORD_SCORE = 3
+
+
+    def __init__(self, value: str, x: int, y: int, flag: Flag, can_swap: bool) -> None:
         """
         Initialize a cell on the board.
 
@@ -10,7 +17,8 @@ class Cell:
         :param can_swap: A boolean indicating whether the cell's value can be swapped.
         """
         self.value: str = value       # The character value of the cell
-        self.flag: str = flag         # A flag associated with the cell (e.g., for multipliers in scoring)
+        self.flag: Cell.Flag = flag         # A flag associated with the cell (e.g., for multipliers in scoring)
         self.x: int = x               # The x-coordinate of the cell on the board
         self.y: int = y               # The y-coordinate of the cell on the board
         self.can_swap = can_swap      # Boolean flag indicating if the cell's value can be swapped
+

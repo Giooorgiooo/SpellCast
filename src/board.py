@@ -33,11 +33,11 @@ class Board:
                 # Randomly choose a letter and a flag indicating whether the cell can be swapped
                 letter = choice(ascii_lowercase)
                 can_swap = random() < 0.3
-                self.cells[y].append(Cell(letter, x, y, " ", can_swap))
+                self.cells[y].append(Cell(letter, x, y, Cell.Flag.NONE, can_swap))
 
         # Randomly set special flags for some cells
-        choice(choice(self.cells)).flag = "$"  # Double letter score
-        choice(choice(self.cells)).flag = "2" if random() > 0.5 else "3"  # Double or triple word score
+        choice(choice(self.cells)).flag = Cell.Flag.DOUBLE_WORD_SCORE # Double letter score
+        choice(choice(self.cells)).flag = Cell.Flag.DOUBLE_LETTER_SCORE if random() > 0.5 else Cell.Flag.TRIPLE_LETTER_SCORE # Double or triple word score
 
     def _setup_from_input(self) -> None:
         """
@@ -46,11 +46,11 @@ class Board:
         The input string specifies cell values and flags. 
         Special flags like "!" indicate that the cell can be swapped.
         """
-        board_string: str = input().strip()  # Read the input string
+        board_string: str = input("Board string: ").strip()  # Read the input string
 
         i: int = 0  # Index for traversing the input string
         char_counter: int = 0  # Counter to keep track of the position in the board
-        flag: str = " "  # Current flag to be applied to cells
+        flag: Cell.Flag = Cell.Flag.NONE  # Current flag to be applied to cells
         can_swap: bool = False  # Flag indicating if the cell can be swapped
 
         while i < len(board_string):
@@ -59,7 +59,13 @@ class Board:
                 if token == "!":
                     can_swap = True  # Set the swap flag if "!" is encountered
                 else:
-                    flag = token  # Set the special flag (e.g., "2", "D", "T")
+                    match token:
+                        case "2":
+                            flag = Cell.Flag.DOUBLE_LETTER_SCORE
+                        case "3":
+                            flag = Cell.Flag.TRIPLE_LETTER_SCORE
+                        case "$":
+                            flag = Cell.Flag.DOUBLE_WORD_SCORE
             else:
                 # Create a new Cell and add it to the board
                 self.cells[char_counter // Board.COLS].append(Cell(token.lower(), char_counter % Board.COLS, char_counter // Board.COLS, flag, can_swap))
@@ -105,5 +111,5 @@ class Board:
         """
         for row in self.cells:
             for cell in row:
-                print(cell.value + "/" + cell.flag + "|", end="")  # Print the cell value followed by a space
+                print(f"{cell.value}/{cell.flag}|", end="")  # Print the cell value followed by a space
             print()  # Move to the next line after printing a row

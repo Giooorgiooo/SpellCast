@@ -10,9 +10,20 @@ class Word:
         :param path: A list of tuples representing the coordinates and character
                      of each cell in the word path.
         """
+
         self.word: str = ""
         self.path = path
 
+        self.points = 0
+        self.gems = 0
+
+        # Iterate through each cell in the path to build the word, calculate points, and count gems.
+        for _, _, char, _ in self.path:
+            self.word += char
+        
+        self._calculate_points(board)
+
+    def _calculate_points(self, board: Board):
         self.points = 0
         self.gems = 0
 
@@ -31,20 +42,20 @@ class Word:
         multiplier = 1
 
         # Iterate through each cell in the path to build the word, calculate points, and count gems.
-        for x, y, char, _ in self.path:
-            self.word += char
-
+        for x, y, char, got_swapped in self.path:
             # Calculate score for the current letter.
             letter_score = letter_scores[char]
             cell: Cell = board.get_cell(x, y)
 
             # Check for special flags on the cell that modify the score or multiplier.
-            if cell.flag == "2":
-                letter_score *= 2
-            elif cell.flag == "3":
-                letter_score *= 3
-            elif cell.flag == "$":
-                multiplier = 2
+            match cell.flag:
+                case Cell.Flag.DOUBLE_LETTER_SCORE:
+                    letter_score *= 2
+                case Cell.Flag.TRIPLE_LETTER_SCORE:
+                    letter_score *= 3
+                case Cell.Flag.DOUBLE_WORD_SCORE:
+                    multiplier = 2
+
 
             self.points += letter_score
 
@@ -52,6 +63,9 @@ class Word:
             if cell.can_swap:
                 self.gems += 1
 
+            if got_swapped:
+                self.gems -= 3
+                
         # Apply the multiplier to the total points.
         self.points *= multiplier
 
